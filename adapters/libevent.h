@@ -26,12 +26,21 @@ void redisLibeventReadEvent(int fd, short event, void *arg) {
 void redisLibeventWriteEvent(int fd, short event, void *arg) {
     ((void)fd); ((void)event);
     redisLibeventEvents *e = (redisLibeventEvents*)arg;
-    redisAsyncHandleWrite(e->context);
+
+    switch(event) {
+        case EV_TIMEOUT:
+            redisAsyncFree(e->context);
+            return;
+
+        case EV_WRITE:
+            redisAsyncHandleWrite(e->context);
+            return;
+    }
 }
 
 void redisLibeventAddRead(void *privdata) {
     redisLibeventEvents *e = (redisLibeventEvents*)privdata;
-    event_add(&e->rev, e->context->tv);
+    event_add(&e->rev,e->context->tv);
 }
 
 void redisLibeventDelRead(void *privdata) {
@@ -41,7 +50,7 @@ void redisLibeventDelRead(void *privdata) {
 
 void redisLibeventAddWrite(void *privdata) {
     redisLibeventEvents *e = (redisLibeventEvents*)privdata;
-    event_add(&e->wev,NULL);
+    event_add(&e->wev,e->context->tv);
 }
 
 void redisLibeventDelWrite(void *privdata) {

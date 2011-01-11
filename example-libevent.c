@@ -33,7 +33,7 @@ void disconnectCallback(const redisAsyncContext *c, int status) {
 int main (int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
-    struct timeval tv = {.tv_sec = 0, .tv_usec = 1000*1000};
+    struct timeval tv = {.tv_sec = 0, .tv_usec = 100*1000};
 
     redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
