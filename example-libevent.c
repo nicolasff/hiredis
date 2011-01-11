@@ -8,7 +8,10 @@
 
 void getCallback(redisAsyncContext *c, void *r, void *privdata) {
     redisReply *reply = r;
-    if (reply == NULL) return;
+    if (reply == NULL) {
+        printf("reply=NULL, timeout.\n");
+        return;
+    }
     printf("argv[%s]: %s\n", (char*)privdata, reply->str);
 
     /* Disconnect after receiving the reply to GET */
@@ -30,6 +33,7 @@ void disconnectCallback(const redisAsyncContext *c, int status) {
 int main (int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);
     struct event_base *base = event_base_new();
+    struct timeval tv = {.tv_sec = 0, .tv_usec = 1000*1000};
 
     redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
     if (c->err) {
@@ -41,8 +45,10 @@ int main (int argc, char **argv) {
     redisLibeventAttach(c,base);
     redisAsyncSetConnectCallback(c,connectCallback);
     redisAsyncSetDisconnectCallback(c,disconnectCallback);
+    redisAsyncSetTimeout(c,&tv);
     redisAsyncCommand(c, NULL, NULL, "SET key %b", argv[argc-1], strlen(argv[argc-1]));
     redisAsyncCommand(c, getCallback, (char*)"end-1", "GET key");
     event_base_dispatch(base);
+    event_base_free(base);
     return 0;
 }

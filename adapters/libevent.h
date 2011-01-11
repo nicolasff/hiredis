@@ -11,7 +11,16 @@ typedef struct redisLibeventEvents {
 void redisLibeventReadEvent(int fd, short event, void *arg) {
     ((void)fd); ((void)event);
     redisLibeventEvents *e = (redisLibeventEvents*)arg;
-    redisAsyncHandleRead(e->context);
+
+    switch(event) {
+        case EV_TIMEOUT:
+            redisAsyncFree(e->context);
+            return;
+
+        case EV_READ:
+            redisAsyncHandleRead(e->context);
+            return;
+    }
 }
 
 void redisLibeventWriteEvent(int fd, short event, void *arg) {
@@ -22,7 +31,7 @@ void redisLibeventWriteEvent(int fd, short event, void *arg) {
 
 void redisLibeventAddRead(void *privdata) {
     redisLibeventEvents *e = (redisLibeventEvents*)privdata;
-    event_add(&e->rev,NULL);
+    event_add(&e->rev, e->context->tv);
 }
 
 void redisLibeventDelRead(void *privdata) {

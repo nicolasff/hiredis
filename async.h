@@ -89,6 +89,9 @@ typedef struct redisAsyncContext {
     /* Called when the first write event was received. */
     redisConnectCallback *onConnect;
 
+    /* Timeout delay */
+    struct timeval *tv;
+
     /* Regular command callbacks */
     redisCallbackList replies;
 
@@ -108,6 +111,7 @@ int redisAsyncSetConnectCallback(redisAsyncContext *ac, redisConnectCallback *fn
 int redisAsyncSetDisconnectCallback(redisAsyncContext *ac, redisDisconnectCallback *fn);
 void redisAsyncDisconnect(redisAsyncContext *ac);
 void redisAsyncFree(redisAsyncContext *ac);
+void redisAsyncSetTimeout(redisAsyncContext *ac, struct timeval *tv);
 
 /* Handle read/write events */
 void redisAsyncHandleRead(redisAsyncContext *ac);

@@ -30,6 +30,7 @@
  */
 
 #include <string.h>
+#include <strings.h>
 #include <assert.h>
 #include <ctype.h>
 #include "async.h"
@@ -109,6 +110,9 @@ static redisAsyncContext *redisAsyncInitialize(redisContext *c) {
     ac->sub.invalid.tail = NULL;
     ac->sub.channels = dictCreate(&callbackDict,NULL);
     ac->sub.patterns = dictCreate(&callbackDict,NULL);
+
+    ac->tv = NULL;
+
     return ac;
 }
 
@@ -261,6 +265,12 @@ void redisAsyncFree(redisAsyncContext *ac) {
     if (!(c->flags & REDIS_IN_CALLBACK))
         __redisAsyncFree(ac);
 }
+
+/* Sets a timeout limit, owned by the client library. */
+void redisAsyncSetTimeout(redisAsyncContext *ac, struct timeval *tv) {
+    ac->tv = tv;
+}
+
 
 /* Helper function to make the disconnect happen and clean up. */
 static void __redisAsyncDisconnect(redisAsyncContext *ac) {
